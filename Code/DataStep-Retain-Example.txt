@@ -1,0 +1,19 @@
+/* example for retaining and accumulating variables */
+/* read in data */
+data work.student;
+	label Name='Name of student';
+	format Income dollar6. Birthday date5.;
+	input Name :$15. Income comma6. Birthday monyy5.;
+	datalines;
+Alfred 6,000 Apr95
+Alice 5,590 Dec96
+Barbara 9,200 Feb96
+;
+run;
+
+/* modify dataset */
+data work.student2;
+	set work.student;
+	retain TotalIncome;
+	TotalIncome+Income;
+run;

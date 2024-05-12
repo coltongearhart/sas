@@ -1,0 +1,18 @@
+/* general syntax for writing output */
+/* -> <filetype> -> use rtf for a word file and pdf for a pdf file
+/* -> bodytitle option is only for rtf 
+/* open output */
+ods <filetype> file=<filename (with path)>.<filetype>
+	<bodytitle> style=journal;
+
+/* select only a certain output items from a procedure */
+ods select <tablename>;
+/* customize title for a procedure's output */
+title <title (string)>;
+
+/* run procedure that generates output */
+
+/* ... */
+
+/* close output */
+ods <filetype> close;

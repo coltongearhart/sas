@@ -1,0 +1,11 @@
+/* example for datalines */
+/* read in data */
+data work.student;
+	infile datalines dlm='?';
+	input Name :$10. Sex $1.;
+	datalines;
+Alfred?M
+Alice?F
+Barbara?F
+;
+run;

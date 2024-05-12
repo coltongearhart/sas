@@ -1,0 +1,21 @@
+/* example for @n */
+/* read in data */
+data work.student;
+	input @13 LastName $12. @25 Sex $1.;
+	datalines;
+Alfred      Wise        M
+Alice       McCarty     F
+Barbara     Hamilton    F
+;
+run;
+
+/* example for +n */
+/* read in data */
+data work.student;
+	input @9 Zip 5. +2 State $2.;
+	datalines;
+Alfred  41092  GA
+Alice   50293  NY
+Barbara 70932  OH  
+;
+run;

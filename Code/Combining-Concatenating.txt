@@ -1,0 +1,4 @@
+/* general syntax for concatening datasets */
+data work.tempC;
+	set work.temp1 work.temp2 ...;
+run;

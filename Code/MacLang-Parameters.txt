@@ -1,0 +1,16 @@
+/* general syntax for a macro parameters */
+/* define macro with positional parameters */
+%macro <macro name>(<parameter1>,<parameter2>,...);
+	<macro text>;
+%mend <macro name>;
+
+/* call macro with positional parameters */
+%<macro name>(<value1>,<value2>,...) ;
+
+/* define macro with keyword parameters */
+%macro <macro name>(<keyword1>=<value1>,<keyword2>=<value2>,...);
+	<macro text>;
+%mend <macro name>;
+
+/* call macro with keyword parameters */
+%<macro name>(<value1>,<value2>,...) ;

@@ -1,0 +1,303 @@
+/*
+Example -> 1
+Purpose -> Demonstrate properties of Gibbs sampling
+*/
+
+/* open output */
+ods rtf file='/folders/myfolders/Applications/Greaves - A second look/Output/Example 1.rtf' 
+	bodytitle style=journal;
+
+/* set things */
+ods escapechar='~';
+options mcompilenote=all;
+
+/* macro to reshape data from wide to long */
+/* arguments
+-> wideData -> wide dataset
+-> longData -> output dataset name  
+-> stackVars -> variables to be stacked
+-> keepRow -> keep the row index in the output dataset (set to 0 if transposing a row vector)
+-> keepVars -> additional variables to keep in output dataset (don't supply an argument if only the stacked variables are wanted) */
+%macro wideToLong(wideData=, longData=, stackVars=, keepRow=1, keepVars=);
+	data &longData;
+		/* specify dataset to reshape */
+		set &wideData;
+
+		/* specify array for variables to be stacked */
+		array temp{*} &stackVars;
+
+		/* set index for which observation is being read */
+		rowIndex+1;
+
+		/* transpose the desired columns and output record */
+		do colIndex=1 to dim(temp);
+			newVar=temp{colIndex};
+			output;
+		end;
+
+		/* specify keep row or not */
+		%if &keepRow=1 %then
+			%do;
+				%let keepVars=&keepVars rowIndex;
+			%end;
+
+		/* attach rest of columns that we wanted to keep */
+		keep &keepVars colIndex newVar;
+	run;
+
+%mend wideToLong;
+
+/* macro to calculate density estimates
+-> have to edit macro to fit situation
+--> add/delete parameters if different than two variables of interest
+--> edit/add conditional distribution calculations */
+/* arguments of macro
+-> inData -> simulated dataset
+-> outData -> output datset names
+-> vars -> variables to estimate
+-> nVars -> number of variables to estimate (nVars=1,2,3,...)
+-> start{i} -> first value of the ith variable to estimate {start{i} in range of (ith variable | other parameters) and less than stop{i}}
+-> stop{i} -> last value of the ith variable to estimate {stop{i} in range of (ith variable | other parameters) and greater than start{i}}
+-> by{i} -> increment amount for value of ith random variable value {0 < by{i} < stop{i}-start{i}} */
+%macro estimate(inData=, outData=, vars=, nVars=, start1=, stop1=, by1=, 
+		start2=, stop2=, by2=);
+	/* repeat process for each variable that needs estimated */
+	%do v=1 %to &nVars;
+
+		/* set variable */
+		%let var=%scan(&vars, &v);
+
+		/* intermediate calculation for density estimates */
+		data work.temp&v.a;
+			/* specify simulated dataset */
+			set &inData;
+
+			/* initialize value of random variable */
+			value=&&start&v;
+
+			/* specify array for new calculations */
+			array temp{%sysevalf((&&stop&v-&&start&v)/&&by&v,floor)} 
+				k1-k%sysevalf((&&stop&v-&&start&v)/&&by&v,floor);
+
+			/* conditionally do calculations */
+			%if (&var=x) %then
+				%do;
+
+					/* loop */
+					do i=1 to dim(temp);
+
+						/* calculate f(x|lambda) for each lambda */
+						temp{i}=lambdaSim*exp(-lambdaSim*value);
+
+						/*increase RV value */
+						value+&&by&v;
+					end;
+				%end;
+			%else
+				%do;
+
+					/* loop */
+					do i=1 to dim(temp);
+
+						/* calculate f(lambda|x) for each x */
+						temp{i}=(xSim+&beta)**(&alpha+1)*(value**&alpha)*exp(-value*(xSim+&beta))/gamma(&alpha+1);
+
+						/* increase RV value */
+						value+&&by&v;
+					end;
+				%end;
+
+			/* clean up */
+			keep iteration k1-k%sysevalf((&&stop&v-&&start&v)/&&by&v,floor);
+		run;
+
+		/* calculate final density estimates of x by averaging over lambdas */
+		proc means data=work.temp&v.a mean nonobs noprint;
+			var k1-k%sysevalf((&&stop&v-&&start&v)/&&by&v,floor);
+			output out=work.temp&v.b (drop=_type_ _freq_) 
+				mean=k1-k%sysevalf((&&stop&v-&&start&v)/&&by&v,floor);
+		run;
+
+		/* reshape dataset */
+		%wideToLong(wideData=work.temp&v.b, 
+			longData=work.temp&v.c(rename=(colIndex=k newVar=Estimate)), 
+			stackVars=k1-k%sysevalf((&&stop&v-&&start&v)/&&by&v,floor), keepRow=0, keepVars=);
+
+		/* specify output dataset */
+		%let out=%scan(&outData, &v);
+
+		/* create dataset with density estimates and corresponding inputs of x */
+		data work.&out;
+			/* specify dataset with density estimates */
+			set work.temp&v.c (rename=(Estimate=f_&var.Hat));
+
+			/* calculate inputs for x */
+			if k=1 then
+				&var=&&start&v;
+			else
+				&var+&&by&v;
+
+			/* clean up */
+			drop k;
+		run;
+
+	%end;
+	
+	/* delete intermediate datasets from library */
+	%do v=1 %to &nVars;
+		proc datasets library=work nolist;
+			delete temp&v.a temp&v.b temp&v.c;
+		run;
+	%end;
+%mend estimate;
+
+/* initialize everything */
+%let n=100000; /* number of random data points to generate */
+%let alpha=5; /* paramater value for prior */
+%let beta=100; /* paramater value for prior */
+%let burnin=500; /* number of burn-in iterations to use */
+%let int=300; /* number of values to interpolate with for actual density curves */
+
+/* simulate data */
+data work.sim;
+
+	/* set random seed */
+	call streaminit(1);
+	
+	/* initialize starting values and set counter */
+	xSim=5;
+	lambdaSim=1.5;
+	iteration=1;
+	output;
+
+	/* sample from conditional distributions */
+	do iteration=2 to &n;
+		xSim=rand('exponential')/lambdaSim;
+		lambdaSim=rand('gamma', &alpha+1)/(xSim+&beta);
+		output;
+	end;
+
+	/* remove burn-in iterations */
+	if iteration>&burnin;
+run;
+
+/* calculate density estimates */
+%estimate(inData=work.sim, outData=estX estLambda, vars=x lambda, 
+	nVars=2, start1=0, stop1=300, by1=2, start2=0, stop2=.3, by2=0.004);
+
+/* create data for marginal density curve of x */
+data work.plotX;
+	/* initialize values */
+	i=1;
+	x2=&beta;
+
+	/* generate pdf values */
+	do until (i>&int);
+
+		/* calculate x and f(x) */
+		x=x2-&beta;
+		f_x=pdf('pareto', x2, &alpha, &beta);
+
+		/* write observation */
+		output;
+
+		/* increase random variable value */
+		x2+1;
+
+		/* increase counter */
+		i+1;
+	end;
+	/* clean up */
+	drop x2 i;
+run;
+
+/* create data for marginal density curve of lambda */
+data work.plotLambda;
+	/* initialize values */
+	i=1;
+	lambda=0;
+
+	/* generate pdf values */
+	do until (i>&int);
+
+		/* calculate f(lambda) */
+		f_lambda=pdf('gamma', lambda, &alpha, 1/&beta);
+
+		/* write observation */
+		output;
+
+		/* increase random variable value */
+		lambda+0.001;
+
+		/* increase counter */
+		i+1;
+	end;
+	/* clean up */
+	drop i;
+run;
+
+/* combine data for x */
+data work.bothX;
+	set work.plotX (rename=(x=x1)) work.estX (rename=(x=x2)) ;
+run;
+
+/* combine data for lambda */
+data work.bothLambda;
+	set work.plotLambda (rename=(lambda=lambda1)) work.estLambda (rename=(lambda=lambda2)) ;
+run;
+
+/* specify last i values for scatterplot */
+%let i=100;
+
+/* create scatter plot of simulated values of x */
+proc sgplot data=work.sim;
+	scatter x=iteration y=xSim;
+	where iteration>&n-&i;
+	title 'Figure 1: Scatterplot of generated sample values of X';
+	xaxis label='Iteration';
+	yaxis max=100 label='x';
+run;
+
+/* create scatter plots of simulated values of lambda */
+proc sgplot data=work.sim;
+	scatter x=iteration y=lambdaSim;
+	where iteration>&n-&i;
+	title "Figure 2: Scatterplot of generated sample values of ~{unicode '03BB'x}";
+	xaxis label='Iteration';
+	yaxis label="~{unicode '03BB'x}";
+run;
+
+/* create histogram of x */
+proc sgplot data=work.sim;
+	histogram xSim / scale=proportion nbins=250;
+	title 'Figure 3: Histogram of generated sample values of X';
+	xaxis max=200 label='x';
+run;
+
+/* create histogram of lambda */
+proc sgplot data=work.sim;
+	histogram lambdaSim / scale=proportion nbins=250;
+	title "Figure 4: Histogram of generated sample values of ~{unicode '03BB'x}";
+	xaxis max=0.3 label="~{unicode '03BB'x}";
+run;
+
+/* create plot of estimated xs with marginal density curve overlaid */
+proc sgplot data=work.bothX;
+	series x=x1 y=f_x / legendlabel='Actual density';
+	scatter x=x2 y=f_xHat / legendlabel='Estimated density';
+	title 'Figure 5: Estimated and actual density of X';
+	xaxis label='x';
+	yaxis label='f(x)';
+run;
+
+/* create plot of estimated lambdas with marginal density curve overlaid */
+proc sgplot data=work.bothLambda;
+	series x=lambda1 y=f_lambda / legendlabel='Actual density';
+	scatter x=lambda2 y=f_lambdaHat / legendlabel='Estimated density';
+	title "Figure 6: Estimated and actual density of ~{unicode '03BB'x}";
+	xaxis label="~{unicode '03BB'x}";
+	yaxis label="f(~{unicode '03BB'x})";
+run;
+
+/* close output */
+ods rtf close;

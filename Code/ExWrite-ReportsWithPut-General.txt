@@ -1,0 +1,15 @@
+/* general syntax for reports with put statement */
+/* / in put statement is a line break */
+data _null_;
+	set work.temp;
+	file <filename (with path)> <(mod)>;
+	
+	/* write data values */
+	put <vars> <(formats)>;
+	
+	/* write a blank line */
+	put;
+	
+	/* write string constants */
+	put <some text> / <some more text >;
+run;

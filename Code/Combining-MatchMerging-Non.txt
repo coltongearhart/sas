@@ -1,0 +1,17 @@
+/* general syntax for match merging datasets with non-matches */
+/* -> each dataset must be sorted by <byvar> */
+data work.tempC;
+	merge work.temp1 (in=<invar1>) work.temp2 (in=invar2) ...;
+	by <byvar>;
+	
+	/* assign in variables for later use */
+	dataset1=<invar1>;
+	dataset2=<invar2>;
+	...;
+	
+	/* subset combined dataset based on which dataset contributed */
+	if dataset1=1;
+	
+	/* keep only records with a match */
+	if dataset1 or dataset2 or ...;
+run;

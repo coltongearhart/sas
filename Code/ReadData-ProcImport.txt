@@ -1,0 +1,7 @@
+/* example for proc import */
+/* read in data (xlsx file) */
+proc import datafile='/folders/myfolders/Handbook/Data/Student data.xlsx' 
+		out=work.student dbms=xlsx replace;
+	sheet=Enrolled;
+	getnames=yes;
+run;

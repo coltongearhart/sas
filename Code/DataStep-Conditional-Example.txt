@@ -1,0 +1,45 @@
+/* example for conditional logic statements */
+/* read in data and modify resulting dataset */
+data work.student;
+	length HeightStatus $8.;
+	infile '/folders/myfolders/Handbook/Data/Student data.txt';
+	input Name $ Sex $ Age Height Weight;
+
+	/* create new variable based on a condition */
+	if Height lt 55 then
+		HeightStatus='Short';
+	else if Height lt 65 then
+		HeightStatus='Normal';
+	else
+		HeightStatus='Tall';
+
+	/* create new variable based on two conditions using logical operators */
+	if Sex eq'M' and Age lt 14 then
+		Class='A';
+	else if Sex eq'M' and Age ge 14 then
+		Class='C';
+
+	if Sex eq 'F' and Age lt 14 then
+		Class='B';
+	else if Sex eq 'F' and Age ge 14 then
+		Class='D';
+
+	/* create same variable using nested if statements */
+	if Sex eq 'M' then
+		do;
+
+			if Age lt 14 then
+				Class='A';
+			else
+				Class='C';
+		end;
+
+	if Sex eq 'F' then
+		do;
+
+			if Age lt 14 then
+				Class='B';
+			else
+				Class='D';
+		end;
+run;

@@ -1,0 +1,21 @@
+/* examples for infile */
+/* read in data (txt file) */
+data work.student;
+	infile '/folders/myfolders/Handbook/Data/Student data.txt';
+	input Name $ Sex $ Age Height Weight;
+run;
+
+/* read in data (csv file) */
+data work.student;
+	infile '/folders/myfolders/Handbook/Data/Student data.csv' firstobs=2 dsd;
+	input Name $ Sex $ Age Height Weight;
+run;
+
+/* filename */
+filename student '/folders/myfolders/Handbook/Data/Student data.txt';
+
+/* read in data (text file) */
+data work.student;
+	infile student;
+	input Name $ Sex $ Age Height Weight;
+run;

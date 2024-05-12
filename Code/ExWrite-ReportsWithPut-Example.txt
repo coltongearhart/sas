@@ -1,0 +1,43 @@
+/* example for reports with put statement */
+/* read in data */
+data work.student;
+	infile '/folders/myfolders/Handbook/Data/Student data.txt';
+	input Name $ Sex $ Age Height Weight;
+run;
+
+/* sort dataset */
+proc sort data=work.student;
+	by Sex;
+run;
+
+/* create header for report */
+data _null_;
+	file '/folders/myfolders/Handbook/Output/Report - Put.txt';
+	put 'Information about students';
+	put '--------------------------';
+	put;
+run;
+
+/* actually create report */
+data _null_;
+	set work.student;
+	by Sex;
+
+	/* append to file with header */
+	file '/folders/myfolders/Handbook/Output/Report - Put.txt' mod;
+
+	/* write header with information for the first observation of each sex */
+	if first.Sex then
+		do;
+			put 'Gender = ' Sex;
+			put;
+			put @1 'Name' @15 'Age' @20 'Height' @27 'Weight' / @1 '----' @15 
+				'---' @20 '------' @27 '------';
+		end;
+
+	/* write out the data for all records */
+	put @1 Name @15 Age @20 Height @27 Weight;
+	
+	/* separate with blank line */
+	if last.Sex then put;
+run;

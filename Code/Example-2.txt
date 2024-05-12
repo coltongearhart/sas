@@ -1,0 +1,192 @@
+/*
+Example -> 2
+Purpose -> Apply Gibbs sampling
+*/
+/* open output */
+ods rtf file='/folders/myfolders/applications/Greaves - A second look/Output/Example 2.rtf' 
+	bodytitle style=journal;
+
+/* set things */
+ods escapechar='~';
+options mcompilenote=all;
+
+/* macro to reshape data from wide to long */
+/* arguments
+-> wideData -> wide dataset
+-> longData -> output dataset name  
+-> stackVars -> variables to be stacked
+-> keepRow -> keep the row index in the output dataset (set to 0 if transposing a row vector)
+-> keepVars -> additional variables to keep in output dataset (don't supply an argument if only the stacked variables are wanted) */
+%macro wideToLong(wideData=, longData=, stackVars=, keepRow=1, keepVars=);
+	data &longData;
+		/* specify dataset to reshape */
+		set &wideData;
+
+		/* specify array for variables to be stacked */
+		array temp{*} &stackVars;
+
+		/* set index for which observation is being read */
+		rowIndex+1;
+
+		/* transpose the desired columns and output record */
+		do colIndex=1 to dim(temp);
+			newVar=temp{colIndex};
+			output;
+		end;
+
+		/* specify keep row or not */
+		%if &keepRow=1 %then
+			%do;
+				%let keepVars=&keepVars rowIndex;
+			%end;
+
+		/* attach rest of columns that we wanted to keep */
+		keep &keepVars colIndex newVar;
+	run;
+
+%mend wideToLong;
+
+/* macro to calculate density estimates
+-> have to edit macro to fit situation
+--> add/delete parameters if different than two variables of interest
+--> edit/add conditional distribution calculations */
+/* arguments of macro
+-> inData -> simulated dataset
+-> outData -> output datset names
+-> vars -> variables to estimate
+-> nVars -> number of variables to estimate (nVars=1,2,3,...)
+-> start{i} -> first value of the ith variable to estimate {start{i} in range of (ith variable | other parameters) and less than stop{i}}
+-> stop{i} -> last value of the ith variable to estimate {stop{i} in range of (ith variable | other parameters) and greater than start{i}}
+-> by{i} -> increment amount for value of ith random variable value {0 < by{i} < stop{i}-start{i}} */
+%macro estimate(inData=, outData=, vars=, nVars=, start1=, stop1=, by1=);
+	/* repeat process for each variable that needs estimated */
+	%do v=1 %to &nVars;
+
+		/* set variable */
+		%let var=%scan(&vars, &v);
+
+		/* intermediate calculation for density estimates */
+		data work.temp&v.a;
+			/* specify simulated dataset */
+			set &inData;
+
+			/* initialize value of random variable */
+			value=&&start&v;
+
+			/* specify array for new calculations */
+			array temp{%sysevalf((&&stop&v-&&start&v)/&&by&v,floor)} 
+				k1-k%sysevalf((&&stop&v-&&start&v)/&&by&v,floor);
+
+			/* conditionally do calculations */			
+			%if (&var=x) %then
+				%do;
+
+					/* loop */
+					do i=1 to dim(temp);
+
+						/* calculate f(x|p,n) for each p and n */
+						if value>nSim then
+							temp{i}=0;
+						else
+							temp{i}=comb(nSim, value)*(pSim**value)*(1-pSim)**(nSim-value);
+
+						/*increase RV value */
+						value+&&by&v;
+					end;
+				%end;
+			%else
+				%do;
+					/* do nothing */	
+				%end;
+
+			/* clean up */
+			keep iteration k1-k%sysevalf((&&stop&v-&&start&v)/&&by&v,floor);
+		run;
+
+		/* calculate final density estimates of x by averaging over lambdas */
+		proc means data=work.temp&v.a mean nonobs noprint;
+			var k1-k%sysevalf((&&stop&v-&&start&v)/&&by&v,floor);
+			output out=work.temp&v.b (drop=_type_ _freq_) 
+				mean=k1-k%sysevalf((&&stop&v-&&start&v)/&&by&v,floor);
+		run;
+
+		/* reshape dataset */
+		%wideToLong(wideData=work.temp&v.b, 
+			longData=work.temp&v.c(rename=(colIndex=k newVar=Estimate)), 
+			stackVars=k1-k%sysevalf((&&stop&v-&&start&v)/&&by&v,floor), keepRow=0, keepVars=);
+
+		/* specify output dataset */
+		%let out=%scan(&outData, &v);
+
+		/* create dataset with density estimates and corresponding inputs of x */
+		data work.&out;
+			/* specify dataset with density estimates */
+			set work.temp&v.c (rename=(Estimate=f_&var.Hat));
+
+			/* calculate inputs for x */
+			if k=1 then
+				&var=&&start&v;
+			else
+				&var+&&by&v;
+
+			/* clean up */
+			drop k;
+		run;
+
+	/* delete intermediate datasets from library */
+	%do v=1 %to &nVars;
+
+		proc datasets library=work nolist;
+			delete temp&v.a temp&v.b temp&v.c;
+			run;
+		%end;
+		
+	%end;
+%mend estimate;
+
+/* initialize everything */
+%let n=10000; /* number of random data points to generate */
+%let alpha=2; /* parameter value for prior */
+%let beta=8; /* parameter value for prior */
+%let lambda=12; /* parameter value for prior */
+%let burnin=500; /* number of burn-in iterations to use */
+
+/* simulate data */
+data work.sim;
+
+	/* set random seed */
+	call streaminit(2);
+	
+	/* initialize starting values and set counter */
+	xSim=5;
+	pSim=0.5;
+	nSim=15;
+	iteration=1;
+	output;
+
+	/* sample from conditional distributions */
+	do iteration=2 to &n;
+		xSim=rand('binomial', pSim, nSim);
+		pSim=rand('beta', xSim+&alpha+1, nSim+&beta-xSim);
+		nSim=rand('poisson', &lambda*(1-pSim))+xSim;
+		output;
+	end;
+
+	/* remove burn-in iterations */
+	if iteration>&burnin;
+run;
+
+/* calculate density estimates */
+%estimate(inData=work.sim, outData=estX, vars=x, nVars=1, start1=0, stop1=20, 
+	by1=1);
+
+/* create scatter plot of simulated values of x */
+proc sgplot data=work.estX;
+	needle x=x y=f_xHat / legendlabel='Estimated density' markers;
+	title 'Figure 7: Estimated density of X';
+	xaxis label='x';
+	yaxis label='f(x)';
+run;
+
+/* close output */
+ods rtf close;

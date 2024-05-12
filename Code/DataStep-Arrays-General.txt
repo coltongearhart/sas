@@ -1,0 +1,17 @@
+/* general syntax for defining and using arrays */
+data work.temp2;
+	set work.temp;
+	
+	/* define numeric array */
+	array <arrayname>{dim} <array elements> <(initial value list)>;
+	/* define character array */
+	array <arrayname>{dim} <$> <length> <array elements> <(initial value list)>;
+
+	/* loop through each item in array */
+	do i=1 to dim(<arrayname>);
+		<actions involving array{i}>;
+	end;
+	
+	/* use array elements as an argument to a function */
+	<newvar>=<function>(of <arrayname>{*});
+run;

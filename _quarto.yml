@@ -1,0 +1,17 @@
+project:
+  type: book
+  output-dir: docs
+
+book:
+  title: "SAS Handbook"
+  author: "Colton Gearhart"
+  date: 1-30-2019
+  cover-image: sas.png
+  chapters:
+    - index.qmd
+    
+format:
+  html:
+    theme: flatly
+
+title-block-banner: true

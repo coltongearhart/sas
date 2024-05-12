@@ -1,0 +1,16 @@
+/* example for #n */
+/* read in data */
+data work.student;
+	input Name $10. #3 Score2;
+	datalines;
+Alfred
+78
+90
+Alice
+96
+92
+Barbara
+88
+86
+;
+run;

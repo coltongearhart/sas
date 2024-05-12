@@ -1,0 +1,16 @@
+/* example for @ */
+/* read in data */
+data work.student;
+	/* load Name into input buffer (name gets repeated for each test score) */
+	input Name $ @;
+
+	/* loop to add Score to input buffer (and index the test number); then output */
+	do Test=1 to 4;
+		input Score @;
+		output;
+	end;
+	datalines;
+Sarah 89 70 90 91
+Eric 87 79 90 88
+;
+run;

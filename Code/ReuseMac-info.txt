@@ -1,0 +1,43 @@
+/* macro to get info about a dataset */
+%macro info (what=, inData=) / minoperator;
+	/* check if a valid parameter is given */
+	%if &what in (nobs vars) %then
+		%do;
+			/* determine which process to perform */
+			%if &what=nobs %then
+				%do;
+					/* get table info */
+					proc contents data=&inData noprint out=work.temp;
+					run;
+
+					/* extract desired info */
+					proc sort data=work.temp nodupkey out=work.temp2 (keep=nobs);
+						by nobs;
+					run;
+
+					/* view number of observations */
+					proc print data=work.temp2 noobs;
+					run;
+				%end;
+			%else
+				%do;
+					/* get table of info */
+					proc contents data=&inData varnum noprint out=work.temp;
+					run;
+
+					/* extract desired info */
+					proc sort data=work.temp out=work.temp2(keep=Name Varnum);
+						by varnum;
+					run;
+
+					/* view variable names */
+					proc print data=work.temp2 noobs;
+					run;
+				%end;
+		%end;
+		%else
+			%put Error -> what must be nobs or vars;
+%mend info;
+
+/* call */
+%info(what=<what>, inData=work.temp)

@@ -1,0 +1,19 @@
+/* general syntax for do loops */
+data work.temp2;
+	set work.temp;
+
+	/* do to loop */
+	do <index>=<startvalue> to <endvalue> (by <increment>);
+		<actions>;
+	end;
+
+	/* do until loop */
+	do until <expression>;
+		<actions>;
+	end;
+
+	/* do while loop */
+	do while <expression>
+		<actions>;
+	end;
+run;

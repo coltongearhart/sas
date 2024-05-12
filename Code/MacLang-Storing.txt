@@ -1,0 +1,22 @@
+/* general syntax for saving macros */
+/* specify options and assign library */
+options mstored sasmstore=<libname>;
+libname <libname> <folder path>;
+
+/* define and store macro */
+%macro <macro name> / store source des=<description>;
+	<macro text>;
+%mend <macro name>;
+
+/* view stored macros */
+proc catalog cat=<libname>.sasmacr;
+	contents;
+run;
+
+/* view source code of stored macro */
+%copy <macro name> / source;
+
+/* delete stored macro from catalog */
+proc catalog cat=<libname>.sasmacr;
+	delete <macro name> / et=macro;
+run;

@@ -1,0 +1,19 @@
+# Overview {.unnumbered}
+
+## Handbook
+
+<embed src="sas-handbook.pdf" type="application/pdf" width="100%" height="1000px"></embed>
+
+## Source
+
+::: callout-note
+## Quarto blog publish details
+
+This book was created using [Quarto](https://quarto.org/) and published with Github Pages.
+:::
+
+::: callout-tip
+## Github repository for code
+
+You can find the code to reproduce this project at [coltongearhart/sas](https://github.com/coltongearhart/sas).
+:::

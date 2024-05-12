@@ -1,0 +1,8 @@
+/* general syntax for dropping, keeping and renaming variables */
+/* -> when renaming, have to use one equal sign for each pair */
+data work.temp2 (rename=(<oldvars>=<newvars>) keep=<keepvars> drop=<dropvars>);
+	set work.temp;
+	keep <keepvars>;
+	drop <dropvars>;
+	rename <oldvars=newvars>;
+run;

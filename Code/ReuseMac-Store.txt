@@ -1,0 +1,16 @@
+/* specify options and assign library */
+options mstored sasmstore=storemac;
+libname storemac '/folders/myfolders/Handbook/Macros';
+
+/* view stored macros */
+proc catalog cat=storemac.sasmacr;
+	contents;
+run;
+
+/* view source code of stored macro */
+%copy <macro name> / source;
+
+/* delete stored macro from catalog */
+proc catalog cat=storemac.sasmacr;
+	delete <macro name> / et=macro;
+run;

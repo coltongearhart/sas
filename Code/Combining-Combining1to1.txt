@@ -1,0 +1,6 @@
+/* general syntax for combining rows (one-to-one) */
+data work.tempC;
+	set work.temp1 work.temp2;
+	set work.temp2;
+	... ...;
+run;

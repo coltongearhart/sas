@@ -1,0 +1,27 @@
+/* example for defining and using arrays */
+/* read in data */
+data work.student;
+	infile datalines dlm=',' dsd;
+	input Name :$15. Income1-Income5;
+	datalines;
+Alfred,6000,5200,,6750,7900
+Alice,5590,8000,7130,,6800
+Barbara,,9200,7600,8090,7450
+;
+run;
+
+/* modify dataset */
+data work.student2;
+	set work.student;
+	array Income{*} Income1-Income5;
+	
+	/* recode missing values */
+	do i=1 to dim(Income);
+		if Income{i}=. then
+			Income{i}=0;
+	end;
+	drop i;
+	
+	/* calculate new variable based off variables in array */
+	AvgIncome=mean(of Income{*});
+run;

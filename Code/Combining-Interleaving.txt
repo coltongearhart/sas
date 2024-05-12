@@ -1,0 +1,6 @@
+/* general syntax for interleaving datasets */
+/* -> each dataset must be sorted by <byvar> */
+data work.tempC;
+	set work.temp1 work.temp2 ...;
+	by <byvar>;
+run;

@@ -1,0 +1,10 @@
+/* example for : */
+/* read in data */
+data work.student;
+	input Name :$15. Sex $1.;
+	datalines;
+Alfred M
+AliceInWonderland F
+Barbara F
+;
+run;

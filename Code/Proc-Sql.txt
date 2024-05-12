@@ -1,0 +1,56 @@
+/* general syntax / flow for proc sql */
+/* create dataset */
+proc sql;
+	create table work.temp2 as
+		select <vars>
+		from work.temp
+		where <condition>
+		group by <aggvar>
+		order by <sortvar>;
+quit;
+
+/* specific syntaxes for proc sql */
+proc sql;
+
+	/* create a new sas dataset */
+	create table work.temp2 as ...
+	
+	/* select all variables from the old table */
+	select * from work.temp
+	
+	/* rename variables */
+	select <old var name> as <new var name>
+	
+	/* calculate new variable */
+	/* -> can also use other functions such as max(), avg(), etc. */
+	select <oldvar with additional calculations> as <newvar>
+	
+	/* conditionally calculate new variable */
+	/* -> there is no if/then statement, so have to use case/when */
+	/* -> without as <newvar>, the calculated variable just has a blank header */
+	select
+		case
+			when <condition using old value> then <newvar value>
+			when <condition using old value> then <newvar value>
+			...
+			else <newvar value>
+		end as <newvar>
+
+	/* format and label variable */
+	select <oldvar> format=<sas format> label=<label>
+	
+	/* subset dataset */
+	where <expression>
+	
+	/* remove duplicates */
+	select distinct <var>
+	
+	/* concatenate tables (by default, this keeps only unique observations) */
+	select * from work.temp1 union select * from work.temp2
+	
+	/* join tables */
+	/* -> aliases are used to identify which table a variable came from */
+	select <alias1>.<old var name> <alias2>.<old var name>
+		from <old table1> <alias1> <inner, left, right, etc.> join <old table2> <alias2> 
+			on (<alias1>.<key variable1>=<alias2>.<key variable2>);
+quit;

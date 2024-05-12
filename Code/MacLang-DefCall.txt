@@ -1,0 +1,9 @@
+/* general syntax for a macro definition and call */
+/* define macro */
+%macro <macro name>;
+	<macro text>;
+%mend <macro name>;
+
+/* call macro */
+/* -> semicolon is included after call so that code underneath is highlighted correctly */
+%<macro name> ;

@@ -1,0 +1,10 @@
+/* example for informats */
+/* read in data */
+data work.student;
+	input Name :$15. Income comma6. Birthday monyy5.;
+	datalines;
+Alfred 6,000 Apr95
+Alice 5,590 Dec96
+Barbara 9,200 Feb96
+;
+run;

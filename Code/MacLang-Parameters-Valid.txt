@@ -1,0 +1,25 @@
+/* general syntax for parameter validation using in operator */
+/* define macro */
+%macro <macro name>(<parameter>) / minoperator;
+	/* check if a valid parameter is given */
+	%if &<parameter> in <list of values> %then
+		<action>;
+	%else
+		%put <error message>;
+%mend <macro name>;
+
+/* general syntax / example for data driven parameter validation */
+/* define macro */
+%macro <macro name>(<parameter>) / minoperator;
+	/* create list acceptable values from the given dataset */
+	proc sql noprint;
+		select distinct <var> into :list separated by ' '
+			from work.temp;
+	quit;
+
+	/* check if a valid parameter is given */
+	%if &<parameter> in &list %then
+		<action>;
+	%else
+		%put <error message>;
+%mend <macro name>;

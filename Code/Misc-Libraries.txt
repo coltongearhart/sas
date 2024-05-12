@@ -1,0 +1,13 @@
+/* general syntax for assigning a library */
+libname <libname> <folder path>;
+run;
+
+/* general syntax for deleting a dataset from a library */
+proc datasets library=<libname>;
+	delete <dataset>;
+run;
+
+/* general syntax for deleting all datasets from a library */
+proc datasets library=<libname> kill;
+run;
+ 

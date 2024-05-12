@@ -1,0 +1,17 @@
+/* example for proc format */
+/* define format and informat */
+proc format;
+	value age low-13='Young' 14-16='Average' 17-20='Old' .='Not given';
+	invalue $ sex 'M'='Male' 'F'='Female';
+run;
+
+/* read in data */
+data work.student;
+	format Age age.;
+	infile '/folders/myfolders/Handbook/Data/Student data.txt';
+	input Name $ Sex :$sex. Age Height Weight;
+run;
+
+/* view dataset */
+proc print data=work.student;
+run;

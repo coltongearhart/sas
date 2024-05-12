@@ -1,0 +1,8 @@
+/* example for dropping, keeping and renaming variables */
+/* read in data and modify resulting dataset */
+data work.student (rename=(Name=FirstName) drop=Height);
+	keep Name Sex Age Height;
+	rename Sex=Gender;
+	infile '/folders/myfolders/Handbook/Data/Student data.txt';
+	input Name $ Sex $ Age Height Weight;
+run;

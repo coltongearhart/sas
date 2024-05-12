@@ -1,0 +1,9 @@
+/* general syntax for proc report */
+/* create report */
+proc report data=work.temp <options>;
+	title <title>;
+	column <vars list>;
+	define <column1> / <define type and column attributes>;
+	define <column2> / <define type and column attributes>;
+	...;
+run;

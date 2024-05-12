@@ -1,0 +1,6 @@
+/* general syntax for match merging datasets (one-to-one and one-to-many) */
+/* -> each dataset must be sorted by <byvar> */
+data work.tempC;
+	merge work.temp1 work.temp2 ...;
+	by <byvar>;
+run;

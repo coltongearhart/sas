@@ -1,0 +1,65 @@
+/* example for bootstrapping */
+/* -> bootstrap confidence intervals for median height */
+/* read in data */
+data work.student;
+	infile '/folders/myfolders/Handbook/Data/Student data.txt';
+	input Name $ Sex $ Age Height Weight;
+run;
+
+/* extract number of observations */
+data _null_;
+	set work.student nobs=temp;
+	call symputx('n',temp);
+run;
+
+/* transpose dataset */
+proc transpose data=work.student out=work.original(keep=Height1-Height&n) prefix=Height;
+	var Height;
+run;
+
+/* initialize number of bootstrap samples */
+%let b=10000;
+
+/* create bootstrap samples */
+data work.boot (drop=Height1-Height&n j k);
+
+	/* specify original sample */
+	set work.original;
+	
+	/* set seed */
+	call streaminit(3);
+	
+	/* create original observation holders */
+	array origH{*} Height1-Height&n;
+	
+	/* create bootstrap observation holders */
+	array bootH{&n};
+	
+	/* generate bootstrap samples */
+	do i=1 to &b;
+	
+		/* generate an individual bootstrap sample */
+		do j=1 to &n;
+			/* randomly select observation from original sample */
+			k=rand('integer',1,&n);
+			bootH{j}=origH{k};
+		end;
+		
+		/* calculate statistic */
+    	medianH=median(of bootH{*});
+		
+		/* output sample and statistic */
+		output;
+	end;
+run;
+
+/* calcualte bootstrap confidence intervals */
+proc univariate data=work.boot noprint;
+	var medianH;
+	output out=work.cis pctlpts=2.5,5,50,75,95,97.5 pctlpre=P;
+run;
+	
+/* view CI limits */
+title 'Confidence interval limits';
+proc print data=work.cis noobs;
+run;

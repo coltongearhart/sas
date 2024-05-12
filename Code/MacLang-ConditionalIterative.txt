@@ -1,0 +1,13 @@
+/* general syntax for conditional processsing and iterative statements */
+%macro <macro name>;
+	/* conditionally process this portion */
+	%if <condition> %then
+		<action>;
+	%else
+		<action>;
+		
+	/* iteratively perform this portion */
+	%do i=1 %to <n> (%by <increment>);
+		<action>;
+	%end;
+%mend <macro name>;

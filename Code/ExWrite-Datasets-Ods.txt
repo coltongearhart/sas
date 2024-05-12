@@ -1,0 +1,5 @@
+/* general syntax for exporting a dataset with an ods statement (to a csv file) */
+ods csv file=<filename (with path)>;
+
+/* close file */
+ods csv close;

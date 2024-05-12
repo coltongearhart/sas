@@ -1,0 +1,9 @@
+/* example for @@ */
+/* read in data */
+data work.student;
+	/* hold record in input buffer for the next iteration */
+	input Name $ Score1-Score4 @@;
+	datalines;
+Sarah 89 70 90 91 Eric 87 79 90 88
+;
+run;

@@ -1,0 +1,30 @@
+/* example for random number simulation */
+/* initialize everything */
+%let n=100000; /* number of random data points to generate */
+%let shape=5; /* shape parameter value */
+%let rate=1.5; /* rate parameter value */
+%let location=3; /* location parameter value */
+
+/* simulate data */
+data work.sim;
+
+	/* set random seed */
+	call streaminit(1);
+	
+	/* generate numbers from gamma distribution with rate parameter */
+	/* -> equivalent to rand('gamma',&shape)*(&scale), where scale=1/rate */
+	do iteration=1 to &n;
+		x=rand('gamma',&shape)/(&rate)+&location;
+		output;
+	end;
+run;
+
+/* plot data */
+proc sgplot data=work.sim;
+	histogram x / scale=proportion;
+run;
+
+/* summarize data */
+proc means data=work.sim maxdec=3;
+	var x;
+run; 

@@ -1,0 +1,59 @@
+/* example for simulating methods */
+/* -> one proportion z-test */
+/* initialize everything */
+%let exp=10000; /* number of simulations to run */
+%let n=200; /* sample size */
+%let p=0.7; /* true proportion of success */
+%let p0=0.8; /* assumed proportion of success */
+%let alpha=0.10; /* significance level */
+
+/* simulate data */
+data work.sim (drop=i);
+
+	/* set random seed */
+	call streaminit(2);
+
+	/* create observation holders */
+	array x(&n);
+	
+	/* generate samples */
+	do Experiment=1 to &exp;
+		/* generate observations */
+		do i=1 to &n;
+			x(i)=rand('binomial',&p,1);
+		end;
+		/* output sample */
+		output;
+	end;
+run;
+
+/* calculate statistics for each sample */
+data work.stat (drop=x1-x&n);
+
+	/* specify simulated dataset */
+	set work.sim;
+	
+	/* create observation holders */
+	array x(&n);
+	
+	/* calculate  p hat, standard error, test statistic, and p value */
+	pHat=sum(of x{*})/&n;
+	se=sqrt(&p0*(1-&p0)/&n);
+	ts=(pHat-&p0)/se;
+	pValue=2*(1-probnorm(abs(ts)));
+	
+	/* make decision */
+	decision=(pValue lt &alpha);
+run;
+
+/* accumulate results over all the simulated datasets */
+/* plot of test statstics */
+proc sgplot data=work.stat;
+	density ts / type=kernel;
+	xaxis label='z';
+run;
+
+/* calculate power */
+proc means data=work.stat n mean;
+	var decision;
+run;

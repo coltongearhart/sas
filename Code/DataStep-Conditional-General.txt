@@ -1,0 +1,20 @@
+/* general syntax for conditional logic statements */
+data work.temp2;
+	set work.temp;
+
+	if <condition(s)> then
+		<action>;
+	else if <condition(s)> then
+		<action>;
+	else
+		<action>;
+
+	if <conditions(s)> then
+		do;
+			<actions>;
+		end;
+	else
+		do;
+			<actions>;
+		end;
+run;

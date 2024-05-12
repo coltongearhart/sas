@@ -1,0 +1,10 @@
+/* example for removing formats and labels */
+/* create new dataset with previous formats removed */
+data work.student2;
+	set work.student;
+	format Income Birthday;
+run;
+
+/* view dataset and don't show labels */
+proc print data=work.student2;
+run;

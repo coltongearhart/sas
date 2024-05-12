@@ -1,0 +1,34 @@
+/* macro to reshape dataset from wide to long */
+/* definition */
+%macro wideToLong(wideData=, longData=, stackVars=, keepRow=1, keepVars=);
+	data &longData;
+		/* specify dataset to reshape */
+		set &wideData;
+
+		/* specify array for variables to be stacked */
+		array temp{*} &stackVars;
+
+		/* set index for which observation is being read from long dataset */
+		rowIndex+1;
+
+		/* transpose the desired columns and output record */
+		do colIndex=1 to dim(temp);
+			newVar=temp{colIndex};
+			output;
+		end;
+
+		/* conditioanlly modify columns to be kept */
+		%if &keepRow=1 %then
+			%do;
+				%let keepVars=&keepVars rowIndex;
+			%end;
+
+		/* attach rest of desired columns */
+		keep &keepVars colIndex newVar;
+	run;
+%mend wideToLong;
+
+/* call */
+%wideToLong(wideData=work.temp,longData=work.temp2(rename=(rowIndex=<i> colIndex=<j> newVar=<newvar>)), 
+	stackVars=<vars list>, keepRow=<0or1>, keepVars=<vars list>);
+

@@ -1,0 +1,7 @@
+/* general syntax for exporting a dataset with proc export (to a csv file) */
+/* -> replace overwrites the existing file */
+/* -> label writes variable labels as first row instead of variable names */
+proc export data=work.temp
+		outfile=<filename (with path)> 
+		dbms=csv replace <(label)>;
+run;

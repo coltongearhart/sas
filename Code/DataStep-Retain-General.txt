@@ -1,0 +1,13 @@
+/* general syntax for retaining and accumulating variables */
+data work.temp2;
+	set work.temp;
+	retain <countervar> <accumvar>;
+	
+	/* counter variable */
+	<countervar>+1;
+	
+	/* accumulating variable */
+	<accumvar>=<accumvar>+<varinterest>;
+	<accumvar>=sum(<varinterest>);
+	<accumvar>+<varinterest>;
+run;
